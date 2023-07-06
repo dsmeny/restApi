@@ -1,5 +1,6 @@
 import express from "express";
 import { readFile, writeFile } from "fs/promises";
+import { v4 as idv4 } from "uuid";
 import morgan from "morgan";
 import db from "../db.json" assert { type: "json" };
 const app = express();
@@ -12,6 +13,17 @@ app.get("/", (req, res) => {
   res.status(200).json(db);
 });
 
+app.get("/:id", (req, res) => {
+  const id = req.params.id;
+  const record = db[`${id}`];
+
+  if (!record) {
+    res.status(400).json({ error: "Bad Request" });
+  }
+  res.status(200).json(record);
+});
+
+/* title routes */
 app.get("/title/:id", (req, res) => {
   const id = req.params.id;
   const record = db[`${id}`];
@@ -23,7 +35,21 @@ app.get("/title/:id", (req, res) => {
   res.status(200).json(record);
 });
 
-app.put("/title/:id", (req, res) => {
+app.post("/title", async (req, res) => {
+  const record = req.body;
+
+  if (!record) {
+    res.status(400).json({ error: "Bad Request" });
+  }
+
+  db[`${idv4()}`] = record;
+
+  await writeFile("./db.json", JSON.stringify(db, null, 2));
+
+  res.status(200).json(record);
+});
+
+app.put("/title/:id", async (req, res) => {
   const id = req.params.id;
   const record = db[`${id}`];
   const query = req.query.title;
@@ -34,17 +60,25 @@ app.put("/title/:id", (req, res) => {
 
   record.title = query;
 
+  await writeFile("./db.json", JSON.stringify(db, null, 2));
+
   res.status(200).json({ title: record.title });
 });
 
-app.get("/:id", (req, res) => {
+app.delete("/title/:id", async (req, res) => {
   const id = req.params.id;
-  const record = db[`${id}`];
+  const name = `${id}`;
+  // const record = db[name];
 
-  if (!record) {
+  if (!db[name]) {
     res.status(400).json({ error: "Bad Request" });
   }
-  res.status(200).json(record);
+
+  delete db[name];
+
+  await writeFile("./db.json", JSON.stringify(db, null, 2));
+
+  res.status(200).json({ title: db[name].title });
 });
 
 const PORT = process.env.PORT || 3000;
