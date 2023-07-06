@@ -1,5 +1,5 @@
 import express from "express";
-import { readFile, writeFile } from "fs/promises";
+import { writeFile } from "fs/promises";
 import { v4 as idv4 } from "uuid";
 import morgan from "morgan";
 import db from "../db.json" assert { type: "json" };
@@ -68,7 +68,6 @@ app.put("/title/:id", async (req, res) => {
 app.delete("/title/:id", async (req, res) => {
   const id = req.params.id;
   const name = `${id}`;
-  // const record = db[name];
 
   if (!db[name]) {
     res.status(400).json({ error: "Bad Request" });
